@@ -22,6 +22,6 @@ readMail <- tm::FunctionGenerator(function(DateFormat = "%d %B %Y %H:%M:%S", ...
         heading <- gsub("Subject: ", "", grep("^Subject:", header, value = TRUE))
 
         MailDocument(content, author, datetimestamp, character(0), header, heading,
-                     if (length(mid)) mid else id, origin, language)
+                     if (length(mid)) mid[1] else id, origin, language)
     }
 })

@@ -7,6 +7,7 @@ export("convert_mbox_eml",
        "removeSignature",
        "threads")
 
+S3method("as.PlainTextDocument", "MailDocument")
 S3method("removeCitation", "MailDocument")
 S3method("removeMultipart", "MailDocument")
 S3method("removeSignature", "MailDocument")

@@ -114,8 +114,8 @@ threads <- function(x) {
         }
         # Use existing thread
         else {
-            threadID <- if (!is.numeric(ht[[parentID]][1])) NA else as.integer(ht[[parentID]][1])
-            threadLevel <- if (!is.numeric(ht[[parentID]][2])) 2 else as.integer(ht[[parentID]][2] + 1)
+            threadID <- if (identical(parentID, "") || !is.numeric(ht[[parentID]][1])) NA else as.integer(ht[[parentID]][1])
+            threadLevel <- if (identical(parentID, "") || !is.numeric(ht[[parentID]][2])) 2 else as.integer(ht[[parentID]][2] + 1)
             ht[[messageID]] <- c(threadID, threadLevel)
             threadIDs[i] <- threadID
             threadLevels[i] <- threadLevel
