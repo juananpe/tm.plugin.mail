@@ -13,13 +13,13 @@ readMail <- tm::FunctionGenerator(function(DateFormat = "%d %B %Y %H:%M:%S", ...
         header <- mail[1:index]
         content <- mail[(index + 1):length(mail)]
 
-        author <- gsub("From: ", "", grep("^From:", header, value = TRUE))
-        datetimestamp <- strptime(gsub("Date: ", "", grep("^Date:", header, value = TRUE)),
+        author <- gsub("From: ", "", grep("^From:", header, value = TRUE, useBytes = TRUE))
+        datetimestamp <- strptime(gsub("Date: ", "", grep("^Date:", header, value = TRUE, useBytes = TRUE)),
                                   format = format,
                                   tz = "GMT")
-        mid <- gsub("Message-ID: ", "", grep("^Message-ID:", header, value = TRUE))
-        origin <- gsub("Newsgroups: ", "", grep("^Newsgroups:", header, value = TRUE))
-        heading <- gsub("Subject: ", "", grep("^Subject:", header, value = TRUE))
+        mid <- gsub("Message-ID: ", "", grep("^Message-ID:", header, value = TRUE, useBytes = TRUE))
+        origin <- gsub("Newsgroups: ", "", grep("^Newsgroups:", header, value = TRUE, useBytes = TRUE))
+        heading <- gsub("Subject: ", "", grep("^Subject:", header, value = TRUE, useBytes = TRUE))
 
         MailDocument(content, author, datetimestamp, character(0), header, heading,
                      if (length(mid)) mid[1] else id, origin, language)
