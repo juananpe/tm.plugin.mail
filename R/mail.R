@@ -120,6 +120,11 @@ threads <- function(x) {
         }
         # Use existing thread
         else {
+            parentID <- unique(parentID)
+            if (length(parentID) > 1) {
+                warning("multiple In-Reply-To fields in message ", messageID)
+                parentID <- parentID[[1]]
+            }
             threadID <- if (identical(parentID, "") || !is.numeric(ht[[parentID]][1])) NA else as.integer(ht[[parentID]][1])
             threadLevel <- if (identical(parentID, "") || !is.numeric(ht[[parentID]][2])) 2 else as.integer(ht[[parentID]][2] + 1)
             ht[[messageID]] <- c(threadID, threadLevel)
