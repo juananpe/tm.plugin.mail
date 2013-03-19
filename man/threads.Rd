@@ -18,16 +18,18 @@ threads(x)
 }
 \details{
   This function uses a one-pass algorithm for extracting the thread
-  information. I.e., reply mails appearing before their corresponding
-  base mails are not detected, and are tagged with thread id \code{NA} and
-  depth \code{2}.
+  information by inspecting the \dQuote{References} header.  Some mails
+  (e.g., reply mails appearing before their corresponding base mails)
+  might not be tagged correctly. 
 }
 \examples{
 require("tm")
 newsgroup <- system.file("mails", package = "tm.plugin.mail")
-news <- Corpus(DirSource(newsgroup), readerControl = list(reader = readMail))
+news <- Corpus(DirSource(newsgroup),
+               readerControl = list(reader = readMail))
 sapply(news, ID)
-lapply(news, function(x) grep("In-Reply-To", attr(x, "Header"), value = TRUE))
+lapply(news,
+       function(x) grep("References", attr(x, "Header"), value = TRUE))
 threads(news)
 }
 \author{Ingo Feinerer}

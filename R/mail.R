@@ -28,14 +28,22 @@ convert_mbox_eml <- function(mbox, dir) {
 }
 
 # Remove e-mail citations beginning with >
-removeCitation <- function(x) UseMethod("removeCitation", x)
-removeCitation.character <- function(x) {
+removeCitation <- function(x, removeQuoteHeader) UseMethod("removeCitation", x)
+removeCitation.character <- function(x, removeQuoteHeader = FALSE) {
     citations <- grep("^[[:blank:]]*>", x, useBytes = TRUE)
+    if (removeQuoteHeader) {
+      headers <- grep("wrote:$|writes:$", x)
+      # A quotation header must immediately preceed a quoted part,
+      # possibly with one empty line in between
+      headers <- union(headers[(headers + 1) %in% citations],
+                       headers[(headers + 2) %in% citations])
+      citations <- union(headers, citations)
+    }
     if (length(citations)) x[-citations] else x
 }
-removeCitation.MailDocument <- function(x) {
+removeCitation.MailDocument <- function(x, removeQuoteHeader = FALSE) {
     # tm::Content(x) <- ... does not work :-(
-    Content(x) <- removeCitation.character(tm::Content(x))
+    Content(x) <- removeCitation.character(tm::Content(x), removeQuoteHeader)
     x
 }
 
@@ -61,7 +69,7 @@ removeMultipart.character <- function(x) {
             else
                 j <- j - 1
         }
-        index <- grep(x[start], content, useBytes = TRUE)
+        index <- grep(x[start], content, useBytes = TRUE, fixed = TRUE)
         index <- if (length(index) == 0) length(content) else (index[1] - 1)
         content <- content[1:index]
         # Now remove remaining headers
@@ -102,8 +110,23 @@ removeSignature.MailDocument <- function(x, marks = character(0)) {
     x
 }
 
-# Compute thread IDs and thread depth
-threads <- function(x) {
+get.thread.id <- function(parentID, ht) {
+    threadID <- NA
+    threadLevel <- 2
+
+    if (!identical(parentID, "") && length(parentID) != 0 && is.numeric(ht[[parentID]][1]))
+        threadID <- as.integer(ht[[parentID]][1])
+
+    if (!identical(parentID, "") && length(parentID) != 0 && is.numeric(ht[[parentID]][2]))
+        threadLevel <- as.integer(ht[[parentID]][2] + 1)
+
+    list(threadID = threadID, threadLevel = threadLevel)
+}
+
+# Compute thread IDs and thread depth (based on heuristics)
+# See http://www.jwz.org/doc/threading.html for a more complete and correct approach
+threads <- function(x)
+{
     # Hash table storing (thread ID, thread level) for a given message ID
     ht <- new.env()
     tid <- 1
@@ -111,8 +134,11 @@ threads <- function(x) {
     for (i in seq_along(x)) {
         messageID <- tm::ID(x[[i]])
         parentID <- gsub("In-Reply-To: ", "", grep("^In-Reply-To:", attr(x[[i]], "Header"), value = TRUE, useBytes = TRUE))
+        refID <- gsub("References: ", "", grep("^References:", attr(x[[i]], "Header"), value = TRUE, useBytes = TRUE))
+        refID <- sub(",$", "", refID)
+
         # Generate new thread
-        if (!length(parentID)) {
+        if (!length(parentID) & !length(refID)) {
             ht[[messageID]] <- c(tid, 1)
             threadIDs[i] <- tid
             threadLevels[i] <- 1
@@ -120,16 +146,38 @@ threads <- function(x) {
         }
         # Use existing thread
         else {
+            info <- get.thread.id(refID, ht)
+            if (!is.na(info$threadID)) {
+                ht[[messageID]] <- c(info$threadID, info$threadLevel)
+                threadIDs[i] <- info$threadID
+                threadLevels[i] <- info$threadLevel
+                next
+            }
+
             parentID <- unique(parentID)
             if (length(parentID) > 1) {
-                warning("multiple In-Reply-To fields in message ", messageID)
-                parentID <- parentID[[1]]
+                for (i in 1:length(parentID)) {
+                    info <- get.thread.id(parentID[[i]], ht)
+                    if (!is.na(info$ThreadID))
+                        next
+                }
+            } else
+                info <- get.thread.id(parentID, ht)
+
+            if (is.na(info$threadID)) {
+                # The message is a reply to some other message, but the parent
+                # e-mail is not available --- for instance, it could be a follow-up
+                # to a discussion from a separate mailing list. Create a new thread.
+                ht[[messageID]] <- c(tid, 1)
+                threadIDs[i] <- tid
+                threadLevels[i] <- 1
+                tid <- tid + 1
             }
-            threadID <- if (identical(parentID, "") || !is.numeric(ht[[parentID]][1])) NA else as.integer(ht[[parentID]][1])
-            threadLevel <- if (identical(parentID, "") || !is.numeric(ht[[parentID]][2])) 2 else as.integer(ht[[parentID]][2] + 1)
-            ht[[messageID]] <- c(threadID, threadLevel)
-            threadIDs[i] <- threadID
-            threadLevels[i] <- threadLevel
+            else {
+                ht[[messageID]] <- c(info$threadID, info$threadLevel)
+                threadIDs[i] <- info$threadID
+                threadLevels[i] <- info$threadLevel
+            }
         }
     }
     list(ThreadID = threadIDs, ThreadDepth = threadLevels)

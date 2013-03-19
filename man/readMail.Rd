@@ -36,7 +36,8 @@ readMail(DateFormat = "\%d \%B \%Y \%H:\%M:\%S", \dots)
 \examples{
 require("tm")
 newsgroup <- system.file("mails", package = "tm.plugin.mail")
-news <- Corpus(DirSource(newsgroup), readerControl = list(reader = readMail))
+news <- Corpus(DirSource(newsgroup),
+               readerControl = list(reader = readMail))
 inspect(news)
 }
 \author{Ingo Feinerer}

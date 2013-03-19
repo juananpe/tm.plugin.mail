@@ -6,7 +6,12 @@
   Construct an object representing an electronic mail document.
 }
 \usage{
-MailDocument(x, author = character(0), datetimestamp = as.POSIXlt(Sys.time(), tz = "GMT"), description = character(0), header = character(0), heading = character(0), id = character(0), origin = character(0), language = character(0), localmetadata = list())
+MailDocument(x, author = character(0),
+             datetimestamp = as.POSIXlt(Sys.time(), tz = "GMT"),
+             description = character(0), header = character(0),
+             heading = character(0), id = character(0),
+             origin = character(0), language = character(0),
+             localmetadata = list())
 }
 \arguments{
   \item{x}{Object of class \code{list} containing the content.}
