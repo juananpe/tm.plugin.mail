@@ -41,11 +41,8 @@ removeCitation.character <- function(x, removeQuoteHeader = FALSE) {
     }
     if (length(citations)) x[-citations] else x
 }
-removeCitation.MailDocument <- function(x, removeQuoteHeader = FALSE) {
-    # tm::Content(x) <- ... does not work :-(
-    Content(x) <- removeCitation.character(tm::Content(x), removeQuoteHeader)
-    x
-}
+removeCitation.MailDocument <-
+    content_transformer(removeCitation.character)
 
 # Remove non-text parts from multipart e-mail messages
 removeMultipart <- function(x) UseMethod("removeMultipart", x)
@@ -81,11 +78,8 @@ removeMultipart.character <- function(x) {
 
     if (length(r) == 0) x else r
 }
-removeMultipart.MailDocument <- function(x) {
-    # tm::Content(x) <- ... does not work :-(
-    Content(x) <- removeMultipart.character(tm::Content(x))
-    x
-}
+removeMultipart.MailDocument <-
+    content_transformer(removeMultipart.character)
 
 # Remove e-mail signatures
 removeSignature <- function(x, marks) UseMethod("removeSignature", x)
@@ -104,11 +98,8 @@ removeSignature.character <- function(x, marks = character(0)) {
     if (signatureStart <= length(x)) x[-(signatureStart:length(x))]
     else x
 }
-removeSignature.MailDocument <- function(x, marks = character(0)) {
-    # tm::Content(x) <- ... does not work :-(
-    Content(x) <- removeSignature.character(tm::Content(x), marks)
-    x
-}
+removeSignature.MailDocument <-
+    content_transformer(removeSignature.character)
 
 get.thread.id <- function(parentID, ht) {
     threadID <- NA
@@ -132,7 +123,7 @@ threads <- function(x)
     tid <- 1
     threadIDs <- threadLevels <- integer(length(x))
     for (i in seq_along(x)) {
-        messageID <- tm::ID(x[[i]])
+        messageID <- meta(x[[i]], "id")
         parentID <- gsub("In-Reply-To: ", "", grep("^In-Reply-To:", attr(x[[i]], "Header"), value = TRUE, useBytes = TRUE))
         refID <- gsub("References: ", "", grep("^References:", attr(x[[i]], "Header"), value = TRUE, useBytes = TRUE))
         refID <- sub(",$", "", refID)
@@ -158,7 +149,7 @@ threads <- function(x)
             if (length(parentID) > 1) {
                 for (i in 1:length(parentID)) {
                     info <- get.thread.id(parentID[[i]], ht)
-                    if (!is.na(info$ThreadID))
+                    if (!is.na(info$threadID))
                         next
                 }
             } else

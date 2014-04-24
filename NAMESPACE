@@ -1,13 +1,17 @@
-import(tm)
+importFrom("NLP", "content", "content<-", "meta")
+importFrom("tm",
+           "content_transformer", "getElem", "PlainTextDocument", "SimpleSource")
 
 export("convert_mbox_eml",
+       "MBoxSource",
        "readMail",
        "removeCitation",
        "removeMultipart",
        "removeSignature",
        "threads")
 
-S3method("as.PlainTextDocument", "MailDocument")
 S3method("removeCitation", "MailDocument")
 S3method("removeMultipart", "MailDocument")
 S3method("removeSignature", "MailDocument")
+
+S3method("getElem", "MBoxSource")
