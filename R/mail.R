@@ -124,8 +124,8 @@ threads <- function(x)
     threadIDs <- threadLevels <- integer(length(x))
     for (i in seq_along(x)) {
         messageID <- meta(x[[i]], "id")
-        parentID <- gsub("In-Reply-To: ", "", grep("^In-Reply-To:", attr(x[[i]], "Header"), value = TRUE, useBytes = TRUE))
-        refID <- gsub("References: ", "", grep("^References:", attr(x[[i]], "Header"), value = TRUE, useBytes = TRUE))
+        parentID <- gsub("In-Reply-To: ", "", grep("^In-Reply-To:", meta(x[[i]], "header"), value = TRUE, useBytes = TRUE))
+        refID <- gsub("References: ", "", grep("^References:", meta(x[[i]], "header"), value = TRUE, useBytes = TRUE))
         refID <- sub(",$", "", refID)
 
         # Generate new thread
